@@ -104,6 +104,51 @@
                         layer.close(index)
                     }, function() {});
                 }
+                
+                // 剪切板图片上传
+                editor.cmElement[0].addEventListener("paste", function (e) {
+                    if ( !(e.clipboardData && e.clipboardData.items) ) {
+                        return;
+                    }
+                    var items = (event.clipboardData && event.clipboardData.items) || [];
+                    var file = null;
+                    if (items && items.length) {
+                        for (var i = 0; i < items.length; i++) {
+                            if (items[i].type.indexOf('image') !== -1) {
+                                file = items[i].getAsFile();
+                                break;
+                            }
+                        }
+                    }
+                    // 剪切版不是文件内容，忽略
+                    if(!(file instanceof File)){
+                        return;
+                    }
+                    var reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    var formData = new FormData();
+                    // 重新创建file对象，修改文件名，防止剪切板图片被误认为同一张图片
+                    let name = file.name;
+                    name = new Date().getTime() + name.substr(name.lastIndexOf("."),name.length);
+                    let upFile = new File([file],name,{
+                        type:file.type
+                    })
+                    formData.append('editormd-image-file', upFile);
+                    var xhr = new XMLHttpRequest();
+                    xhr.onload = function () {
+                        try {
+                            var result = JSON.parse(this.responseText);
+                            if(result.success == 1){
+                                editor.cm.replaceSelection("![](" + result.url + ")");
+                            } 
+                        } catch(err) {
+                            console.log(err)
+                        }
+                    };
+                    xhr.open('POST', '/image/upload?document_id={{$document.document_id}}' + "&guid=" + new Date().getTime(), true);
+                    xhr.send(formData);
+                });
+                
                 // console.log('onload', this);
                 // this.fullscreen();
                 //this.unwatch();
