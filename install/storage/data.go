@@ -80,13 +80,17 @@ func NewData() *data {
 	}
 }
 
+// todo 重构
+
 type data struct {
 	License      int
 	Env          int
 	System       int
 	Database     int
 	SystemConf   map[string]string
-	DatabaseConf map[string]string
+	DatabaseType string
+	DatabaseConf map[string]string // mysql 配置
+	SqliteConf map[string]string // sqlite 配置
 	Status       int
 	Result       string
 	IsSuccess    int
